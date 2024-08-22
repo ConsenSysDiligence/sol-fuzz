@@ -1,0 +1,50 @@
+{
+    "name": "sol-fuzz",
+    "version": "0.0.0",
+    "description": "Library for generating random solidity programs through mutations and grammar-based fuzzing",
+    "keywords": [],
+    "files": [
+        "dist"
+    ],
+    "bin": {
+        "sol-fuzz": "dist/bin/sol-fuzz.js"
+    },
+    "main": "dist/index.js",
+    "types": "dist/index.d.ts",
+    "scripts": {
+        "clean": "rm -rf dist/",
+        "transpile": "tsc",
+        "build": "npm run clean && npm run transpile && chmod u+x dist/bin/sol-fuzz.js",
+        "lint": "eslint src/ test/ --ext=ts",
+        "lint:fix": "eslint src/ test/ --ext=ts --fix",
+        "test": "NODE_OPTIONS='--max-old-space-size=2048' jest --coverage",
+        "prepare": "npm run build"
+    },
+    "dependencies": {
+        "solc-typed-ast": "^18.2.1",
+        "commander": "^12.1.0"
+    },
+    "devDependencies": {
+        "@types/debug": "^4.1.12",
+        "fs-extra": "^11.2.0",
+        "@types/fs-extra": "^11.0.4",
+        "@types/jest": "^29.5.12",
+        "@types/lru-cache": "^5.1.1",
+        "@types/node": "^20.11.19",
+        "@typescript-eslint/eslint-plugin": "^7.0.2",
+        "@typescript-eslint/parser": "^7.0.2",
+        "eslint": "^8.56.0",
+        "eslint-config-prettier": "^9.1.0",
+        "eslint-plugin-prettier": "^5.1.3",
+        "expect": "^29.7.0",
+        "jest": "^29.7.0",
+        "prettier": "^3.2.5",
+        "ts-jest": "^29.1.2",
+        "ts-node": "^10.9.2",
+        "typescript": "^5.3.3"
+    },
+    "homepage": "https://github.com/ConsenSys/sol-fuzz",
+    "bugs": "https://github.com/ConsenSys/sol-fuzz/issues",
+    "repository": "https://github.com/ConsenSys/sol-fuzz",
+    "license": "Apache-2.0"
+}
