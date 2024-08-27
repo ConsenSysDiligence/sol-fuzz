@@ -21,7 +21,7 @@
         "prepare": "npm run build"
     },
     "dependencies": {
-        "solc-typed-ast": "^18.2.1",
+        "solc-typed-ast": "^18.2.2",
         "commander": "^12.1.0"
     },
     "devDependencies": {

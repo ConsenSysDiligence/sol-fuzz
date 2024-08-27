@@ -1,6 +1,6 @@
 import { ASTContext, ASTNode, ASTNodeFactory } from "solc-typed-ast";
 
-export type Match = Map<string, ASTNode>;
+export type Match = Map<string, any>;
 
 export type Matcher = (n: ASTNode) => Match | undefined;
 export type Mutator = (n: ASTNode, match: Match) => void;
@@ -14,7 +14,10 @@ export type IDMap = Map<number, number>;
 
 function translateMatch(match: Match, mapping: IDMap, ctx: ASTContext): Match {
     return new Map(
-        [...match.entries()].map(([name, nd]) => [name, ctx.locate(mapping.get(nd.id) as number)])
+        [...match.entries()].map(([name, nd]) => [
+            name,
+            nd instanceof ASTNode ? ctx.locate(mapping.get(nd.id) as number) : nd
+        ])
     );
 }
 
