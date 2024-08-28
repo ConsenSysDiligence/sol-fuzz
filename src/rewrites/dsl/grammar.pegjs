@@ -71,9 +71,9 @@ MatchElipsis =
 
 // ======================= Rewrite patterns =====================
 RewritePattern
-    = RewriteNode
+    = RewriteChoice
+    / RewriteNode
     / RewriteLiteral
-    / RewriteChoice
     / RewriteVar
     / RewriteArray
 

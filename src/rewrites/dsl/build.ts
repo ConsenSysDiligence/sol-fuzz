@@ -1,5 +1,6 @@
 import {
     assert,
+    ASTNode,
     ASTNodeConstructor,
     ASTNodeFactory,
     BinaryOperation,
@@ -28,13 +29,26 @@ export function pickAny<T>(choices: T[]): T {
     return choices[Math.floor(Math.random() * choices.length)];
 }
 
-export function build(pattern: BaseRewritePattern, match: Match, factory: ASTNodeFactory): any {
+export function build(
+    pattern: BaseRewritePattern,
+    match: Match,
+    factory: ASTNodeFactory,
+    used: Set<number> = new Set()
+): any {
     if (pattern instanceof RWLiteral) {
         return pattern.value;
     }
 
     if (pattern instanceof RWVar) {
-        const val = match.get(pattern.name);
+        let val = match.get(pattern.name);
+
+        if (val instanceof ASTNode) {
+            if (!used.has(val.id)) {
+                used.add(val.id);
+            } else {
+                val = factory.copy(val);
+            }
+        }
 
         return val;
     }
@@ -43,7 +57,7 @@ export function build(pattern: BaseRewritePattern, match: Match, factory: ASTNod
         const res: any[] = [];
 
         for (const compPat of pattern.components) {
-            const comp = build(compPat, match, factory);
+            const comp = build(compPat, match, factory, used);
 
             if (comp instanceof MatchSlice) {
                 res.push(...comp.arr.slice(comp.start, comp.end));
@@ -56,7 +70,7 @@ export function build(pattern: BaseRewritePattern, match: Match, factory: ASTNod
     }
 
     if (pattern instanceof RWChoice) {
-        return build(pickAny(pattern.choices), match, factory);
+        return build(pickAny(pattern.choices), match, factory, used);
     }
 
     if (!(pattern instanceof RWNode)) {
@@ -66,7 +80,7 @@ export function build(pattern: BaseRewritePattern, match: Match, factory: ASTNod
     const constr = nameToConstructor.get(pattern.type);
     assert(constr !== undefined, `NYI constructor ${pattern.type}`);
 
-    const args = pattern.args.map((arg) => build(arg, match, factory));
+    const args = pattern.args.map((arg) => build(arg, match, factory, used));
 
     return factory.make(constr, ...args);
 }
