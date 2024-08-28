@@ -5,6 +5,7 @@ import {
     MatchLiteral,
     MatchNode,
     RWArr,
+    RWChoice,
     RWLiteral,
     RWNode,
     RWVar
@@ -44,4 +45,31 @@ export const twoStmtsSwapRewrite = new RWNode("Block", [
     new RWArr([new RWVar("a"), new RWVar("S2"), new RWVar("b"), new RWVar("S1"), new RWVar("c")]),
     new RWVar("doc"),
     new RWVar("doc")
+]);
+
+export const stmts = new MatchNode("root", "Block", [
+    new MatchArray("statements", [new MatchElipsis("a"), new MatchElipsis("b")]),
+    new MatchAny("doc"),
+    new MatchAny("raw")
+]);
+
+export const insertBreak = new RWNode("Block", [
+    new RWArr([
+        new RWVar("a"),
+        new RWChoice([
+            new RWNode("ExpressionStatement", [
+                new RWNode("FunctionCall", [
+                    new RWLiteral(""),
+                    new RWLiteral("functionCall"),
+                    new RWNode("Identifier", [
+                        new RWLiteral(""),
+                        new RWLiteral("revert"),
+                        new RWLiteral(-1)
+                    ]),
+                    new RWArr([])
+                ])
+            ])
+        ]),
+        new RWVar("b")
+    ])
 ]);

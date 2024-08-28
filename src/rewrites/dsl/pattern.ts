@@ -7,7 +7,7 @@ export class MatchLiteral extends BaseMatchPattern {
     constructor(
         binding: string | undefined,
         public type: string,
-        public value: bigint | string
+        public value: bigint | string | number | null | undefined
     ) {
         super(binding);
     }
@@ -52,7 +52,13 @@ export class RWNode extends BaseRewritePattern {
 }
 
 export class RWLiteral extends BaseRewritePattern {
-    constructor(public value: string | bigint) {
+    constructor(public value: string | bigint | number | null | undefined) {
+        super();
+    }
+}
+
+export class RWChoice extends BaseRewritePattern {
+    constructor(public choices: BaseRewritePattern[]) {
         super();
     }
 }

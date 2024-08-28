@@ -3,7 +3,9 @@ import { Match, Matcher, Mutator, Rewrite } from "../rewrite";
 import { build } from "./build";
 import {
     inequalityPattern,
+    insertBreak,
     nonStrictIneqRewrite,
+    stmts,
     twoStmtsPattern,
     twoStmtsSwapRewrite
 } from "./builtins";
@@ -25,3 +27,4 @@ export function makeRewrite(
 
 export const lessStrictIneqRW = makeRewrite(inequalityPattern, nonStrictIneqRewrite);
 export const swapStatementRW = makeRewrite(twoStmtsPattern, twoStmtsSwapRewrite);
+export const insertRevert = makeRewrite(stmts, insertBreak);

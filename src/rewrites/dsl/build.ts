@@ -1,11 +1,30 @@
-import { assert, ASTNodeConstructor, ASTNodeFactory, BinaryOperation, Block } from "solc-typed-ast";
+import {
+    assert,
+    ASTNodeConstructor,
+    ASTNodeFactory,
+    BinaryOperation,
+    Block,
+    ExpressionStatement,
+    FunctionCall,
+    Identifier
+} from "solc-typed-ast";
 import { Match } from "../rewrite";
 import { MatchSlice } from "./match";
-import { BaseRewritePattern, RWArr, RWLiteral, RWNode, RWVar } from "./pattern";
+import { BaseRewritePattern, RWArr, RWChoice, RWLiteral, RWNode, RWVar } from "./pattern";
 
-const knownASTTypes: Array<ASTNodeConstructor<any>> = [BinaryOperation, Block];
+const knownASTTypes: Array<ASTNodeConstructor<any>> = [
+    BinaryOperation,
+    Block,
+    ExpressionStatement,
+    FunctionCall,
+    Identifier
+];
 
 const nameToConstructor = new Map(knownASTTypes.map((constr) => [constr.name, constr]));
+
+export function pickAny<T>(choices: T[]): T {
+    return choices[Math.floor(Math.random() * choices.length)];
+}
 
 export function build(pattern: BaseRewritePattern, match: Match, factory: ASTNodeFactory): any {
     if (pattern instanceof RWLiteral) {
@@ -32,6 +51,10 @@ export function build(pattern: BaseRewritePattern, match: Match, factory: ASTNod
         }
 
         return res;
+    }
+
+    if (pattern instanceof RWChoice) {
+        return build(pickAny(pattern.choices), match, factory);
     }
 
     if (!(pattern instanceof RWNode)) {
