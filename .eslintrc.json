@@ -29,5 +29,7 @@
         ]
     },
     "ignorePatterns": [
+        "src/rewrites/dsl/grammar_header.ts",
+        "src/rewrites/dsl/parser_gen.ts"
     ]
 }

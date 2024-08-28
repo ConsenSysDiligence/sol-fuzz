@@ -14,7 +14,8 @@
     "scripts": {
         "clean": "rm -rf dist/",
         "transpile": "tsc",
-        "build": "npm run clean && npm run transpile && chmod u+x dist/bin/sol-fuzz.js",
+        "build-parser": "tspegjs -o src/rewrites/dsl/parser_gen.ts --custom-header-file src/rewrites/dsl/grammar_header.ts --allowed-start-rules Rules,Rule,MatchPattern,RewritePattern --cache src/rewrites/dsl/grammar.pegjs",
+        "build": "npm run clean && npm run build-parser && npm run transpile && chmod u+x dist/bin/sol-fuzz.js",
         "lint": "eslint src/ test/ --ext=ts",
         "lint:fix": "eslint src/ test/ --ext=ts --fix",
         "test": "NODE_OPTIONS='--max-old-space-size=2048' jest --coverage",
@@ -41,7 +42,9 @@
         "prettier": "^3.2.5",
         "ts-jest": "^29.1.2",
         "ts-node": "^10.9.2",
-        "typescript": "^5.3.3"
+        "typescript": "^5.3.3",
+        "peggy": "^2.0.1",
+        "ts-pegjs": "^3.1.0"
     },
     "homepage": "https://github.com/ConsenSys/sol-fuzz",
     "bugs": "https://github.com/ConsenSys/sol-fuzz/issues",

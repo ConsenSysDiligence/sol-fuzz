@@ -6,7 +6,8 @@ import {
     Block,
     ExpressionStatement,
     FunctionCall,
-    Identifier
+    Identifier,
+    UncheckedBlock
 } from "solc-typed-ast";
 import { Match } from "../rewrite";
 import { MatchSlice } from "./match";
@@ -15,6 +16,7 @@ import { BaseRewritePattern, RWArr, RWChoice, RWLiteral, RWNode, RWVar } from ".
 const knownASTTypes: Array<ASTNodeConstructor<any>> = [
     BinaryOperation,
     Block,
+    UncheckedBlock,
     ExpressionStatement,
     FunctionCall,
     Identifier

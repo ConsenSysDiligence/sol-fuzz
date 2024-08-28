@@ -2,28 +2,29 @@
 import { Command } from "commander";
 import fse from "fs-extra";
 import {
+    assert,
     ASTReader,
     ASTWriter,
     CACHE_DIR,
     CompilationOutput,
     CompileFailedError,
+    compileJson,
+    compileJsonData,
     CompileResult,
     CompilerKind,
     CompilerVersions,
+    compileSol,
+    compileSourceString,
     DefaultASTWriterMapping,
+    downloadSupportedCompilers,
+    isExact,
     LatestCompilerVersion,
     PathOptions,
     PossibleCompilerKinds,
-    PrettyFormatter,
-    assert,
-    compileJson,
-    compileJsonData,
-    compileSol,
-    compileSourceString,
-    downloadSupportedCompilers,
-    isExact
+    PrettyFormatter
 } from "solc-typed-ast";
-import { applyRewrite, builtinRewrites } from "../rewrites";
+import { applyRewrite, makeRewrite, parseRules, Rewrite, Rule } from "../rewrites";
+import { PeggySyntaxError } from "../rewrites/dsl/parser_gen";
 
 const pkg = require("../../package.json");
 
@@ -81,7 +82,8 @@ async function main() {
         .option(
             "--download-compilers <compilerKind...>",
             `Download specified kind of supported compilers to compiler cache. Supports multiple entries.`
-        );
+        )
+        .option("--rewrites <rewritePath>", `Path to file containing AST re-writes`);
 
     program.parse(process.argv);
 
@@ -136,6 +138,28 @@ async function main() {
 
         return;
     }
+
+    let rewriteRules: Rule[] = [];
+
+    if (options.rewrites) {
+        try {
+            rewriteRules = parseRules(fse.readFileSync(options.rewrites, { encoding: "utf-8" }));
+        } catch (e) {
+            if (e instanceof PeggySyntaxError) {
+                console.error(
+                    `Error parsing rewrites: ${e.location.start.line}:${e.location.start.column}: ${e.message}`
+                );
+                return;
+            }
+        }
+    }
+
+    if (rewriteRules.length === 0) {
+        console.error(`No re-write rules specified. Exiting...`);
+        return;
+    }
+
+    const rewrites: Rewrite[] = rewriteRules.map(([match, rewrite]) => makeRewrite(match, rewrite));
 
     const stdin: boolean = options.stdin;
     const mode: CompileMode = options.mode;
@@ -285,7 +309,7 @@ async function main() {
 
     assert(units.length === 1, `Expected a single source unit`);
 
-    for (const rewrite of builtinRewrites) {
+    for (const rewrite of rewrites) {
         const variants = applyRewrite(units[0], rewrite);
 
         for (const variant of variants) {

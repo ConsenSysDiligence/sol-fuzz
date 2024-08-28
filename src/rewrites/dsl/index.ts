@@ -1,14 +1,6 @@
 import { ASTNode, ASTNodeFactory, replaceNode } from "solc-typed-ast";
 import { Match, Matcher, Mutator, Rewrite } from "../rewrite";
 import { build } from "./build";
-import {
-    inequalityPattern,
-    insertBreak,
-    nonStrictIneqRewrite,
-    stmts,
-    twoStmtsPattern,
-    twoStmtsSwapRewrite
-} from "./builtins";
 import { match } from "./match";
 import { BaseMatchPattern, BaseRewritePattern } from "./pattern";
 
@@ -25,6 +17,5 @@ export function makeRewrite(
     return [matchF, mutateF];
 }
 
-export const lessStrictIneqRW = makeRewrite(inequalityPattern, nonStrictIneqRewrite);
-export const swapStatementRW = makeRewrite(twoStmtsPattern, twoStmtsSwapRewrite);
-export const insertRevert = makeRewrite(stmts, insertBreak);
+export { parseRules } from "./parser";
+export { Rule } from "./pattern";

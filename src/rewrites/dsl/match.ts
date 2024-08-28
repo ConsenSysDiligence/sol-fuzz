@@ -71,8 +71,8 @@ export function match(arg: any, pattern: BaseMatchPattern, partialMatch?: Match)
         const args: any[] = factory.getNodeConstructorArgs(arg);
 
         assert(
-            args.length === pattern.args.length,
-            `Mismatch in node arg length (${args.length}) and pattern args length (${pattern.args.length})`
+            args.length >= pattern.args.length,
+            `Pattern has more args (${pattern.args.length}) than node (${args.length})`
         );
 
         let res: Match[] = [curMatch];

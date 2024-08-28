@@ -74,3 +74,5 @@ export class RWArr extends BaseRewritePattern {
         super();
     }
 }
+
+export type Rule = [BaseMatchPattern, BaseRewritePattern];
