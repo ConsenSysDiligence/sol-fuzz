@@ -1,5 +1,5 @@
 export * from "./rewrite";
-import { lessStrictIneqRW } from "./dsl";
+import { lessStrictIneqRW, swapStatementRW } from "./dsl";
 import { Rewrite } from "./rewrite";
 
-export const builtinRewrites: Rewrite[] = [lessStrictIneqRW];
+export const builtinRewrites: Rewrite[] = [lessStrictIneqRW, swapStatementRW];

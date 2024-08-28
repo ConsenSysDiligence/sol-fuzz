@@ -1,4 +1,14 @@
-import { MatchAny, MatchLiteral, MatchNode, RWLiteral, RWNode, RWVar } from "./pattern";
+import {
+    MatchAny,
+    MatchArray,
+    MatchElipsis,
+    MatchLiteral,
+    MatchNode,
+    RWArr,
+    RWLiteral,
+    RWNode,
+    RWVar
+} from "./pattern";
 
 export const inequalityPattern = new MatchNode("root", "BinaryOperation", [
     new MatchAny("typeString"),
@@ -16,4 +26,22 @@ export const nonStrictIneqRewrite = new RWNode("BinaryOperation", [
     new RWVar("vRightExpression"),
     new RWVar("userFunction"),
     new RWVar("raw")
+]);
+
+export const twoStmtsPattern = new MatchNode("root", "Block", [
+    new MatchArray("statements", [
+        new MatchElipsis("a"),
+        new MatchAny("S1"),
+        new MatchElipsis("b"),
+        new MatchAny("S2"),
+        new MatchElipsis("c")
+    ]),
+    new MatchAny("doc"),
+    new MatchAny("raw")
+]);
+
+export const twoStmtsSwapRewrite = new RWNode("Block", [
+    new RWArr([new RWVar("a"), new RWVar("S2"), new RWVar("b"), new RWVar("S1"), new RWVar("c")]),
+    new RWVar("doc"),
+    new RWVar("doc")
 ]);

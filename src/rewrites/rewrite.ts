@@ -2,8 +2,8 @@ import { ASTContext, ASTNode, ASTNodeFactory } from "solc-typed-ast";
 
 export type Match = Map<string, any>;
 
-export type Matcher = (n: ASTNode) => Match | undefined;
-export type Mutator = (n: ASTNode, match: Match) => void;
+export type Matcher = (n: ASTNode) => Match[];
+export type Mutator = (n: ASTNode, match: Match, factory: ASTNodeFactory) => void;
 
 /**
  * A re-write is a pair of a matcher function and a mutator function.
@@ -33,21 +33,22 @@ export function applyRewrite(root: ASTNode, rewrite: Rewrite): ASTNode[] {
     const [matcher, mutator] = rewrite;
 
     root.walk((nd) => {
-        const m = matcher(nd);
+        const ms = matcher(nd);
 
-        if (m === undefined) {
+        if (ms.length === 0) {
             return;
         }
 
         const ctx = new ASTContext();
         const factory = new ASTNodeFactory(ctx);
 
-        const [rootCopy, remap] = factory.copyWithMapping(root);
-        const ndCopy = ctx.locate(remap.get(nd.id) as number);
-        const matchCopy = translateMatch(m, remap, ctx);
-
-        mutator(ndCopy, matchCopy);
-        res.push(rootCopy);
+        for (const m of ms) {
+            const [rootCopy, remap] = factory.copyWithMapping(root);
+            const ndCopy = ctx.locate(remap.get(nd.id) as number);
+            const matchCopy = translateMatch(m, remap, ctx);
+            mutator(ndCopy, matchCopy, factory);
+            res.push(rootCopy);
+        }
     });
 
     return res;

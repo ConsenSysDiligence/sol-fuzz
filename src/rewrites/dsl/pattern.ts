@@ -62,3 +62,9 @@ export class RWVar extends BaseRewritePattern {
         super();
     }
 }
+
+export class RWArr extends BaseRewritePattern {
+    constructor(public components: BaseRewritePattern[]) {
+        super();
+    }
+}
