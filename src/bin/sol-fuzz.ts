@@ -3,6 +3,8 @@ import { Command } from "commander";
 import fse from "fs-extra";
 import {
     assert,
+    ASTContext,
+    ASTNodeFactory,
     ASTReader,
     ASTWriter,
     CACHE_DIR,
@@ -23,7 +25,15 @@ import {
     PossibleCompilerKinds,
     PrettyFormatter
 } from "solc-typed-ast";
-import { applyRewrite, makeRewrite, parseRules, Rewrite, Rule } from "../rewrites";
+import {
+    applyRandomRewriteDestructive,
+    findRewriteRegions,
+    makeRewrite,
+    parseRules,
+    Rewrite,
+    Rule
+} from "../rewrites";
+import { pickAny } from "../rewrites/dsl/build";
 import { PeggySyntaxError } from "../rewrites/dsl/parser_gen";
 
 const pkg = require("../../package.json");
@@ -83,7 +93,9 @@ async function main() {
             "--download-compilers <compilerKind...>",
             `Download specified kind of supported compilers to compiler cache. Supports multiple entries.`
         )
-        .option("--rewrites <rewritePath>", `Path to file containing AST re-writes`);
+        .option("--rewrites <rewritePath>", `Path to file containing AST re-writes`)
+        .option("--rewrite-depth <rewriteDepth>", `Number of re-writes to apply`, "1")
+        .option("--num-results <numResults>", `Number of results to return`, "1");
 
     program.parse(process.argv);
 
@@ -309,13 +321,22 @@ async function main() {
 
     assert(units.length === 1, `Expected a single source unit`);
 
-    for (const rewrite of rewrites) {
-        const variants = applyRewrite(units[0], rewrite);
+    const rewriteDepth = Number(options.rewriteDepth);
+    const numResults = Number(options.numResults);
+    for (let i = 0; i < numResults; i++) {
+        const factory = new ASTNodeFactory(new ASTContext());
+        const variant = factory.copy(units[0]);
 
-        for (const variant of variants) {
-            console.log("==================================================================");
-            console.log(writer.write(variant));
+        for (let j = 0; j < rewriteDepth; j++) {
+            // Pick a random target
+            const targets = findRewriteRegions(variant);
+            const target = pickAny(targets);
+
+            applyRandomRewriteDestructive(target, rewrites);
         }
+
+        console.log("==================================================================");
+        console.log(writer.write(variant));
     }
 }
 

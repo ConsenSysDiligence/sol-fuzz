@@ -1,4 +1,5 @@
 import { ASTContext, ASTNode, ASTNodeFactory } from "solc-typed-ast";
+import { pickAny } from "./dsl/build";
 
 export type Match = Map<string, any>;
 
@@ -52,4 +53,29 @@ export function applyRewrite(root: ASTNode, rewrite: Rewrite): ASTNode[] {
     });
 
     return res;
+}
+
+export function applyRandomRewriteDestructive(root: ASTNode, rewrites: Rewrite[]): boolean {
+    const factory = new ASTNodeFactory(root.context);
+    const candidates: Array<[ASTNode, Rewrite, Match]> = [];
+
+    root.walk((nd) => {
+        for (const rewrite of rewrites) {
+            const matcher = rewrite[0];
+            const ms = matcher(nd);
+
+            candidates.push(...ms.map((m) => [nd, rewrite, m] as [ASTNode, Rewrite, Match]));
+        }
+    });
+
+    // No matches, nothing to do
+    if (candidates.length === 0) {
+        return false;
+    }
+
+    const [nd, rewrite, match] = pickAny(candidates);
+    const mutator = rewrite[1];
+
+    mutator(nd, match, factory);
+    return true;
 }
