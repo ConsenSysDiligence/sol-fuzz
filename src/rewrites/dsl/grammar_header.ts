@@ -1,17 +1,20 @@
 /* eslint no-unused-vars: 0 */
 // @ts-nocheck
 import {
+    GenRule,
     MatchAny,
     MatchArray,
     MatchElipsis,
     MatchLiteral,
     MatchNode,
+    RewriteRule,
     RWArr,
     RWChoice,
+    RWGen,
     RWLiteral,
     RWNode,
     RWVar
-} from "./pattern";
+} from "./ast";
 
 MatchNode;
 MatchAny;
@@ -23,3 +26,6 @@ RWChoice;
 RWLiteral;
 RWNode;
 RWVar;
+GenRule;
+RewriteRule;
+RWGen;

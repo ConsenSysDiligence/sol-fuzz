@@ -7,7 +7,7 @@ import {
     MatchElipsis,
     MatchLiteral,
     MatchNode
-} from "./pattern";
+} from "./ast";
 
 export class MatchSlice {
     constructor(

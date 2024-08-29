@@ -4,9 +4,22 @@ Rules =
         return tail.reduce((acc: any[], el: any) => {acc.push(el); return acc;}, [head]);
     }
 
-Rule = 
+Rule
+    = GenRule
+    / RewriteRule
+
+GenRuleId =
+    "#"[a-zA-Z0-9_]* { return text(); }
+
+GenRule =
+    name: GenRuleId __ "=" __ pattern: RewritePattern {
+        return new GenRule(name, pattern);
+    }
+    
+
+RewriteRule = 
     match: MatchPattern __ "=>" __ rewrite: RewritePattern {
-        return [match, rewrite];
+        return new RewriteRule(match, rewrite);
     }
 
 Binding =
@@ -37,7 +50,7 @@ MatchAny =
     }
 
 MatchNode =
-    b: Binding? __ constrName: Identifier __ "(" args: MatchPatternList? ")"
+    b: Binding? __ constrName: Identifier __ "(" __ args: MatchPatternList? __ ")"
     {
         return new MatchNode(
             b === null ? undefined : b,
@@ -53,7 +66,7 @@ MatchPatternList =
     }
 
 MatchArray =
-    b: Binding? __ "[" components: MatchPatternList? "]"
+    b: Binding? __ "[" __ components: MatchPatternList? __ "]"
     {
         return new MatchArray(
             b === null ? undefined : b,
@@ -72,9 +85,10 @@ MatchElipsis =
 // ======================= Rewrite patterns =====================
 RewritePattern
     = RewriteChoice
+    / RewriteGen
+    / RewriteVar
     / RewriteNode
     / RewriteLiteral
-    / RewriteVar
     / RewriteArray
 
 RewriteLiteral =
@@ -84,7 +98,7 @@ RewriteLiteral =
     }
 
 RewriteNode =
-    constrName: Identifier __ "(" args: RewritePatternList ")"
+    constrName: Identifier __ "(" __ args: RewritePatternList __ ")"
     {
         return new RWNode(
             constrName,
@@ -99,13 +113,13 @@ RewritePatternList =
     }
 
 RewriteArray =
-    "[" components: RewritePatternList? "]"
+    "[" __ components: RewritePatternList? __ "]"
     {
         return new RWArr( components === null ? [] : components )
     }
 
 RewriteChoice =
-    "any" __ "(" choices: RewritePatternList ")"
+    "any" __ "(" __ choices: RewritePatternList __ ")"
     {
         return new RWChoice(choices);
     }
@@ -113,6 +127,11 @@ RewriteChoice =
 RewriteVar = b: BindingId
     {
         return new RWVar(b);
+    }
+
+RewriteGen = b: GenRuleId 
+    {
+        return new RWGen(b);
     }
 
 // ======================= Common Rules =====================

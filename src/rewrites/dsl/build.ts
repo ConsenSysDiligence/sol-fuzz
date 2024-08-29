@@ -63,8 +63,8 @@ import {
     WhileStatement
 } from "solc-typed-ast";
 import { Match } from "../rewrite";
+import { BaseRewritePattern, RWArr, RWChoice, RWGen, RWLiteral, RWNode, RWVar } from "./ast";
 import { MatchSlice } from "./match";
-import { BaseRewritePattern, RWArr, RWChoice, RWLiteral, RWNode, RWVar } from "./pattern";
 
 const knownASTTypes: Array<ASTNodeConstructor<any>> = [
     ContractDefinition,
@@ -129,6 +129,8 @@ const knownASTTypes: Array<ASTNodeConstructor<any>> = [
 
 const nameToConstructor = new Map(knownASTTypes.map((constr) => [constr.name, constr]));
 
+export type GenEnv = Map<string, BaseRewritePattern>;
+
 export function pickAny<T>(choices: T[]): T {
     return choices[Math.floor(Math.random() * choices.length)];
 }
@@ -137,6 +139,7 @@ export function build(
     pattern: BaseRewritePattern,
     match: Match,
     factory: ASTNodeFactory,
+    env: GenEnv,
     used: Set<number> = new Set()
 ): any {
     if (pattern instanceof RWLiteral) {
@@ -161,7 +164,7 @@ export function build(
         const res: any[] = [];
 
         for (const compPat of pattern.components) {
-            const comp = build(compPat, match, factory, used);
+            const comp = build(compPat, match, factory, env, used);
 
             if (comp instanceof MatchSlice) {
                 res.push(...comp.arr.slice(comp.start, comp.end));
@@ -173,8 +176,18 @@ export function build(
         return res;
     }
 
+    if (pattern instanceof RWGen) {
+        const rwPattern = env.get(pattern.name);
+
+        if (rwPattern === undefined) {
+            throw new Error(`Unknown gen attern ${pattern.name}`);
+        }
+
+        return build(rwPattern, match, factory, env, used);
+    }
+
     if (pattern instanceof RWChoice) {
-        return build(pickAny(pattern.choices), match, factory, used);
+        return build(pickAny(pattern.choices), match, factory, env, used);
     }
 
     if (!(pattern instanceof RWNode)) {
@@ -184,7 +197,7 @@ export function build(
     const constr = nameToConstructor.get(pattern.type);
     assert(constr !== undefined, `NYI constructor ${pattern.type}`);
 
-    const args = pattern.args.map((arg) => build(arg, match, factory, used));
+    const args = pattern.args.map((arg) => build(arg, match, factory, env, used));
 
     return factory.make(constr, ...args);
 }

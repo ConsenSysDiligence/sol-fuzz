@@ -1,11 +1,11 @@
+import { BaseMatchPattern, BaseRewritePattern, BaseRule } from "./ast";
 import { parse } from "./parser_gen";
-import { BaseMatchPattern, BaseRewritePattern, Rule } from "./pattern";
 
-export function parseRule(s: string): Rule {
+export function parseRule(s: string): BaseRule {
     return parse(s, { startRule: "Rule" });
 }
 
-export function parseRules(s: string): Rule[] {
+export function parseRules(s: string): BaseRule[] {
     return parse(s, { startRule: "Rules" });
 }
 

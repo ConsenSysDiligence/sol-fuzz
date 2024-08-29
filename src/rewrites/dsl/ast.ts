@@ -1,3 +1,24 @@
+/// ======== Rules =================================
+export class BaseRule {}
+
+export class RewriteRule extends BaseRule {
+    constructor(
+        public matchPattern: BaseMatchPattern,
+        public rewritePattern: BaseRewritePattern
+    ) {
+        super();
+    }
+}
+
+export class GenRule extends BaseRule {
+    constructor(
+        public name: string,
+        public pattern: BaseRewritePattern
+    ) {
+        super();
+    }
+}
+
 /// ======== Match Patterns ========================
 export class BaseMatchPattern {
     constructor(public binding: string | undefined) {}
@@ -69,10 +90,14 @@ export class RWVar extends BaseRewritePattern {
     }
 }
 
+export class RWGen extends BaseRewritePattern {
+    constructor(public name: string) {
+        super();
+    }
+}
+
 export class RWArr extends BaseRewritePattern {
     constructor(public components: BaseRewritePattern[]) {
         super();
     }
 }
-
-export type Rule = [BaseMatchPattern, BaseRewritePattern];

@@ -12,7 +12,7 @@
     "main": "dist/index.js",
     "types": "dist/index.d.ts",
     "scripts": {
-        "clean": "rm -rf dist/",
+        "clean": "rm -rf dist/ && rm -f src/rewrites/dsl/parser_gen.ts",
         "transpile": "tsc",
         "build-parser": "tspegjs -o src/rewrites/dsl/parser_gen.ts --custom-header-file src/rewrites/dsl/grammar_header.ts --allowed-start-rules Rules,Rule,MatchPattern,RewritePattern --cache src/rewrites/dsl/grammar.pegjs",
         "build": "npm run clean && npm run build-parser && npm run transpile && chmod u+x dist/bin/sol-fuzz.js",

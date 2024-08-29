@@ -30,10 +30,10 @@ import {
     findRewriteRegions,
     makeRewrite,
     parseRules,
-    Rewrite,
-    Rule
+    Rewrite
 } from "../rewrites";
-import { pickAny } from "../rewrites/dsl/build";
+import { BaseRule, GenRule, RewriteRule } from "../rewrites/dsl/ast";
+import { GenEnv, pickAny } from "../rewrites/dsl/build";
 import { PeggySyntaxError } from "../rewrites/dsl/parser_gen";
 
 const pkg = require("../../package.json");
@@ -151,11 +151,11 @@ async function main() {
         return;
     }
 
-    let rewriteRules: Rule[] = [];
+    let rules: BaseRule[] = [];
 
     if (options.rewrites) {
         try {
-            rewriteRules = parseRules(fse.readFileSync(options.rewrites, { encoding: "utf-8" }));
+            rules = parseRules(fse.readFileSync(options.rewrites, { encoding: "utf-8" }));
         } catch (e) {
             if (e instanceof PeggySyntaxError) {
                 console.error(
@@ -163,15 +163,24 @@ async function main() {
                 );
                 return;
             }
+
+            throw e;
         }
     }
+
+    const genRules: GenRule[] = rules.filter((r) => r instanceof GenRule) as GenRule[];
+    const env: GenEnv = new Map(genRules.map((r) => [r.name, r.pattern]));
+
+    const rewriteRules: RewriteRule[] = rules.filter(
+        (r) => r instanceof RewriteRule
+    ) as RewriteRule[];
 
     if (rewriteRules.length === 0) {
         console.error(`No re-write rules specified. Exiting...`);
         return;
     }
 
-    const rewrites: Rewrite[] = rewriteRules.map(([match, rewrite]) => makeRewrite(match, rewrite));
+    const rewrites: Rewrite[] = rewriteRules.map((r) => makeRewrite(r, env));
 
     const stdin: boolean = options.stdin;
     const mode: CompileMode = options.mode;
