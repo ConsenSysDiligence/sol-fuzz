@@ -38,7 +38,7 @@ MatchPattern
     / MatchElipsis
 
 MatchLiteral =
-    b: Binding? __ value: (StringLiteral / BigInt / Number / BoolLit)
+    b: Binding? __ value: (StringLiteral / BigInt / Number / BoolLit / UndefinedLit / NullLit)
     {
         return new MatchLiteral(b === null ? undefined : b, "", value)
     }
@@ -92,7 +92,7 @@ RewritePattern
     / RewriteArray
 
 RewriteLiteral =
-    value: (StringLiteral / BigInt / Number / BoolLit)
+    value: (StringLiteral / BigInt / Number / BoolLit / UndefinedLit / NullLit)
     {
         return new RWLiteral(value)
     }
@@ -213,7 +213,12 @@ Number =
         Number(text())
     }
 
-BoolLit = "true" / "false"
+BoolLit
+    = "true" { return true; }
+    / "false" { return false; }
+
+UndefinedLit = "undefined" { return undefined; }
+NullLit = "null" { return null; }
 
 BigInt =
     Number "n" {
