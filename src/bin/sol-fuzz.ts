@@ -3,8 +3,6 @@ import { Command } from "commander";
 import fse from "fs-extra";
 import {
     assert,
-    ASTContext,
-    ASTNodeFactory,
     ASTReader,
     ASTWriter,
     CACHE_DIR,
@@ -25,15 +23,9 @@ import {
     PossibleCompilerKinds,
     PrettyFormatter
 } from "solc-typed-ast";
-import {
-    applyRandomRewriteDestructive,
-    findRewriteRegions,
-    makeRewrite,
-    parseRules,
-    Rewrite
-} from "../rewrites";
+import { applyNRandomRewrites, makeRewrite, parseRules, Rewrite } from "../rewrites";
 import { BaseRule, GenRule, RewriteRule } from "../rewrites/dsl/ast";
-import { GenEnv, pickAny } from "../rewrites/dsl/build";
+import { GenEnv } from "../rewrites/dsl/build";
 import { PeggySyntaxError } from "../rewrites/dsl/parser_gen";
 
 const pkg = require("../../package.json");
@@ -333,17 +325,7 @@ async function main() {
     const rewriteDepth = Number(options.rewriteDepth);
     const numResults = Number(options.numResults);
     for (let i = 0; i < numResults; i++) {
-        const factory = new ASTNodeFactory(new ASTContext());
-        const variant = factory.copy(units[0]);
-
-        for (let j = 0; j < rewriteDepth; j++) {
-            // Pick a random target
-            const targets = findRewriteRegions(variant);
-            const target = pickAny(targets);
-
-            applyRandomRewriteDestructive(target, rewrites);
-        }
-
+        const variant = applyNRandomRewrites(units[0], rewrites, rewriteDepth);
         console.log("==================================================================");
         console.log(writer.write(variant));
     }

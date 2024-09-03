@@ -1,5 +1,6 @@
-import { ASTContext, ASTNode, ASTNodeFactory } from "solc-typed-ast";
+import { ASTContext, ASTNode, ASTNodeFactory, SourceUnit } from "solc-typed-ast";
 import { pickAny } from "./dsl/build";
+import { findRewriteRegions } from "./template";
 
 export type Match = Map<string, any>;
 
@@ -78,4 +79,19 @@ export function applyRandomRewriteDestructive(root: ASTNode, rewrites: Rewrite[]
 
     mutator(nd, match, factory);
     return true;
+}
+
+export function applyNRandomRewrites(unit: SourceUnit, rewrites: Rewrite[], N: number): SourceUnit {
+    const factory = new ASTNodeFactory(new ASTContext());
+    const variant = factory.copy(unit);
+
+    for (let j = 0; j < N; j++) {
+        // Pick a random target
+        const targets = findRewriteRegions(variant);
+        const target = pickAny(targets);
+
+        applyRandomRewriteDestructive(target, rewrites);
+    }
+
+    return variant;
 }
