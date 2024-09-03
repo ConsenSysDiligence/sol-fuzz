@@ -38,7 +38,7 @@ MatchPattern
     / MatchElipsis
 
 MatchLiteral =
-    b: Binding? __ value: (StringLiteral / BigInt / Number)
+    b: Binding? __ value: (StringLiteral / BigInt / Number / BoolLit)
     {
         return new MatchLiteral(b === null ? undefined : b, "", value)
     }
@@ -92,7 +92,7 @@ RewritePattern
     / RewriteArray
 
 RewriteLiteral =
-    value: (StringLiteral / BigInt / Number)
+    value: (StringLiteral / BigInt / Number / BoolLit)
     {
         return new RWLiteral(value)
     }
@@ -212,6 +212,8 @@ Number =
     "-"?DecDigit+ {
         Number(text())
     }
+
+BoolLit = "true" / "false"
 
 BigInt =
     Number "n" {
