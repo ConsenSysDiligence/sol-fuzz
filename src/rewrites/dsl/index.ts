@@ -14,5 +14,6 @@ export function makeRewrite(rule: RewriteRule, env: GenEnv): Rewrite {
     return [matchF, mutateF];
 }
 
-export { BaseRule } from "./ast";
+export { BaseRule, GenRule, RewriteRule } from "./ast";
+export { GenEnv } from "./build";
 export { parseRules } from "./parser";
