@@ -1,3 +1,4 @@
+import { assert } from "solc-typed-ast";
 import { max, sum } from "./math";
 
 export abstract class Randomness {
@@ -42,7 +43,7 @@ export function pickAnyWeighted<T>(choices: T[], weights: number[], weightSum?: 
         }
     }
 
-    return choices[choices.length - 1];
+    assert(false, `Shouldnt get here`);
 }
 
 const ctrs: Map<any, Map<any, number>> = new Map();
