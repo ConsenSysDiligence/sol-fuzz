@@ -31,7 +31,7 @@ export function pickAny<T>(choices: T[]): T {
  * Pick a random object from `choices`. Weight the probability of picking the i-th object
  * by `weights[i]`
  */
-export function pickAnyWeighted<T>(choices: T[], weights: number[], weightSum?: number): T {
+export function pickAnyWeighted<T>(choices: T[], weights: number[], weightSum?: number): number {
     weightSum = weightSum === undefined ? sum(...weights) : weightSum;
     const coin = Math.floor(Math.random() * weightSum);
 
@@ -39,7 +39,7 @@ export function pickAnyWeighted<T>(choices: T[], weights: number[], weightSum?: 
     for (let i = 0; i < weights.length; i++) {
         t += weights[i];
         if (coin < t) {
-            return choices[i];
+            return i;
         }
     }
 
@@ -55,7 +55,11 @@ const ctrs: Map<any, Map<any, number>> = new Map();
  */
 export function pickAnyDiversity<T>(choices: Array<[T, any]>, site: any): T {
     let ctrMap = ctrs.get(site);
-    ctrMap = ctrMap === undefined ? new Map() : ctrMap;
+
+    if (ctrMap === undefined) {
+        ctrMap = new Map();
+        ctrs.set(site, ctrMap);
+    }
 
     const choiceCounts: number[] = choices.map(([, key]) => {
         const c = ctrMap.get(key);
@@ -66,8 +70,18 @@ export function pickAnyDiversity<T>(choices: Array<[T, any]>, site: any): T {
 
     const invertedChoiceCounts = choiceCounts.map((c) => maxCount + 1 - c);
 
-    return pickAnyWeighted(
+    const resInd = pickAnyWeighted(
         choices.map(([c]) => c),
         invertedChoiceCounts
     );
+
+    const res = choices[resInd][0];
+    const key = choices[resInd][1];
+
+    let oldCnt = ctrMap.get(key);
+    oldCnt = oldCnt === undefined ? 0 : oldCnt;
+
+    ctrMap.set(key, oldCnt + 1);
+
+    return res;
 }
