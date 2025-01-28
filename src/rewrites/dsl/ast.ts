@@ -1,5 +1,7 @@
+import { Id } from "../../utils";
+
 /// ======== Rules =================================
-export class BaseRule {}
+export class BaseRule extends Id {}
 
 export class RewriteRule extends BaseRule {
     constructor(
@@ -20,8 +22,10 @@ export class GenRule extends BaseRule {
 }
 
 /// ======== Match Patterns ========================
-export class BaseMatchPattern {
-    constructor(public binding: string | undefined) {}
+export class BaseMatchPattern extends Id {
+    constructor(public binding: string | undefined) {
+        super();
+    }
 }
 
 export class MatchLiteral extends BaseMatchPattern {
@@ -61,7 +65,7 @@ export class MatchArray extends BaseMatchPattern {
 export class MatchElipsis extends BaseMatchPattern {}
 
 /// ======== Rewrite Patterns ========================
-export class BaseRewritePattern {}
+export class BaseRewritePattern extends Id {}
 
 export class RWNode extends BaseRewritePattern {
     constructor(

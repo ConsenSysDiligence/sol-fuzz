@@ -1,16 +1,12 @@
 import { ASTContext, ASTNode, ASTNodeFactory, SourceUnit } from "solc-typed-ast";
-import { pickAny } from "./dsl/build";
+import { Randomness } from "../utils";
+import { Rewrite } from "./dsl";
 import { findRewriteRegions } from "./template";
 
 export type Match = Map<string, any>;
 
 export type Matcher = (n: ASTNode) => Match[];
 export type Mutator = (n: ASTNode, match: Match, factory: ASTNodeFactory) => void;
-
-/**
- * A re-write is a pair of a matcher function and a mutator function.
- */
-export type Rewrite = [Matcher, Mutator];
 
 export type IDMap = Map<number, number>;
 
@@ -32,7 +28,7 @@ function translateMatch(match: Match, mapping: IDMap, ctx: ASTContext): Match {
 export function applyRewrite(root: ASTNode, rewrite: Rewrite): ASTNode[] {
     const res: ASTNode[] = [];
 
-    const [matcher, mutator] = rewrite;
+    const [matcher, mutator] = [rewrite.matcher, rewrite.mutator];
 
     root.walk((nd) => {
         const ms = matcher(nd);
@@ -56,14 +52,17 @@ export function applyRewrite(root: ASTNode, rewrite: Rewrite): ASTNode[] {
     return res;
 }
 
-export function applyRandomRewriteDestructive(root: ASTNode, rewrites: Rewrite[]): boolean {
+export function applyRandomRewriteDestructive(
+    root: ASTNode,
+    rewrites: Rewrite[],
+    rand: Randomness
+): boolean {
     const factory = new ASTNodeFactory(root.context);
     const candidates: Array<[ASTNode, Rewrite, Match]> = [];
 
     root.walk((nd) => {
         for (const rewrite of rewrites) {
-            const matcher = rewrite[0];
-            const ms = matcher(nd);
+            const ms = rewrite.matcher(nd);
 
             candidates.push(...ms.map((m) => [nd, rewrite, m] as [ASTNode, Rewrite, Match]));
         }
@@ -74,23 +73,31 @@ export function applyRandomRewriteDestructive(root: ASTNode, rewrites: Rewrite[]
         return false;
     }
 
-    const [nd, rewrite, match] = pickAny(candidates);
-    const mutator = rewrite[1];
+    const [nd, rewrite, match] = rand.pickAny(
+        candidates,
+        `candidateRewrites`,
+        ([nd, rewrite]) => `${nd.id}_${rewrite.id}`
+    );
 
-    mutator(nd, match, factory);
+    rewrite.mutator(nd, match, factory);
     return true;
 }
 
-export function applyNRandomRewrites(unit: SourceUnit, rewrites: Rewrite[], N: number): SourceUnit {
+export function applyNRandomRewrites(
+    unit: SourceUnit,
+    rewrites: Rewrite[],
+    N: number,
+    rand: Randomness
+): SourceUnit {
     const factory = new ASTNodeFactory(new ASTContext());
     const variant = factory.copy(unit);
 
     for (let j = 0; j < N; j++) {
         // Pick a random target
         const targets = findRewriteRegions(variant);
-        const target = pickAny(targets);
+        const target = rand.pickAny(targets, `targets`, (target) => target.constructor.name);
 
-        applyRandomRewriteDestructive(target, rewrites);
+        applyRandomRewriteDestructive(target, rewrites, rand);
     }
 
     return variant;

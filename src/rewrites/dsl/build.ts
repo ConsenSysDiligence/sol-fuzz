@@ -62,6 +62,7 @@ import {
     VariableDeclarationStatement,
     WhileStatement
 } from "solc-typed-ast";
+import { Randomness } from "../../utils";
 import { Match } from "../rewrite";
 import { BaseRewritePattern, RWArr, RWChoice, RWGen, RWLiteral, RWNode, RWVar } from "./ast";
 import { MatchSlice } from "./match";
@@ -131,15 +132,12 @@ const nameToConstructor = new Map(knownASTTypes.map((constr) => [constr.name, co
 
 export type GenEnv = Map<string, BaseRewritePattern>;
 
-export function pickAny<T>(choices: T[]): T {
-    return choices[Math.floor(Math.random() * choices.length)];
-}
-
 export function build(
     pattern: BaseRewritePattern,
     match: Match,
     factory: ASTNodeFactory,
     env: GenEnv,
+    rand: Randomness,
     used: Set<number> = new Set()
 ): any {
     if (pattern instanceof RWLiteral) {
@@ -164,7 +162,7 @@ export function build(
         const res: any[] = [];
 
         for (const compPat of pattern.components) {
-            const comp = build(compPat, match, factory, env, used);
+            const comp = build(compPat, match, factory, env, rand, used);
 
             if (comp instanceof MatchSlice) {
                 res.push(...comp.arr.slice(comp.start, comp.end));
@@ -183,11 +181,12 @@ export function build(
             throw new Error(`Unknown gen attern ${pattern.name}`);
         }
 
-        return build(rwPattern, match, factory, env, used);
+        return build(rwPattern, match, factory, env, rand, used);
     }
 
     if (pattern instanceof RWChoice) {
-        return build(pickAny(pattern.choices), match, factory, env, used);
+        const choice = rand.pickAny(pattern.choices, `RWChoice_${pattern.id}`, (p) => p.id);
+        return build(choice, match, factory, env, rand, used);
     }
 
     if (!(pattern instanceof RWNode)) {
@@ -197,7 +196,7 @@ export function build(
     const constr = nameToConstructor.get(pattern.type);
     assert(constr !== undefined, `NYI constructor ${pattern.type}`);
 
-    const args = pattern.args.map((arg) => build(arg, match, factory, env, used));
+    const args = pattern.args.map((arg) => build(arg, match, factory, env, rand, used));
 
     return factory.make(constr, ...args);
 }

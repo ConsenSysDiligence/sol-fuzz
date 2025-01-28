@@ -23,10 +23,12 @@ import {
     PossibleCompilerKinds,
     PrettyFormatter
 } from "solc-typed-ast";
-import { applyNRandomRewrites, makeRewrite, parseRules, Rewrite } from "../rewrites";
+import { applyNRandomRewrites, makeRewrite, parseRules } from "../rewrites";
+import { Rewrite } from "../rewrites/dsl";
 import { BaseRule, GenRule, RewriteRule } from "../rewrites/dsl/ast";
 import { GenEnv } from "../rewrites/dsl/build";
 import { PeggySyntaxError } from "../rewrites/dsl/parser_gen";
+import { Diversity, Unbiased } from "../utils";
 
 const pkg = require("../../package.json");
 
@@ -87,7 +89,11 @@ async function main() {
         )
         .option("--rewrites <rewritePath>", `Path to file containing AST re-writes`)
         .option("--rewrite-depth <rewriteDepth>", `Number of re-writes to apply`, "1")
-        .option("--num-results <numResults>", `Number of results to return`, "1");
+        .option("--num-results <numResults>", `Number of results to return`, "1")
+        .option(
+            "--diversity",
+            "If enabled try to diversify the random choices we make - i.e. bias towards less chosen options."
+        );
 
     program.parse(process.argv);
 
@@ -172,7 +178,9 @@ async function main() {
         return;
     }
 
-    const rewrites: Rewrite[] = rewriteRules.map((r) => makeRewrite(r, env));
+    const rand = options.diversity ? new Diversity() : new Unbiased();
+
+    const rewrites: Rewrite[] = rewriteRules.map((r) => makeRewrite(r, env, rand));
 
     const stdin: boolean = options.stdin;
     const mode: CompileMode = options.mode;
@@ -325,7 +333,7 @@ async function main() {
     const rewriteDepth = Number(options.rewriteDepth);
     const numResults = Number(options.numResults);
     for (let i = 0; i < numResults; i++) {
-        const variant = applyNRandomRewrites(units[0], rewrites, rewriteDepth);
+        const variant = applyNRandomRewrites(units[0], rewrites, rewriteDepth, rand);
         console.log("==================================================================");
         console.log(writer.write(variant));
     }
